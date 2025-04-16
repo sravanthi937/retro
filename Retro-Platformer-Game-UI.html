@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro-Style Platform Game</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#ff4757',secondary:'#7bed9f'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+@keyframes float {
+0% { transform: translateY(0px); }
+50% { transform: translateY(-10px); }
+100% { transform: translateY(0px); }
+}
+@keyframes pulse {
+0% { transform: scale(1); }
+50% { transform: scale(1.05); }
+100% { transform: scale(1); }
+}
+@keyframes moveCloud {
+from { transform: translateX(-100%); }
+to { transform: translateX(100vw); }
+}
+@keyframes bounce {
+0%, 100% { transform: translateY(0); }
+50% { transform: translateY(-15px); }
+}
+@keyframes spin {
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
+}
+@keyframes pixelDust {
+0% { opacity: 1; transform: translateY(0) scale(1); }
+100% { opacity: 0; transform: translateY(-20px) scale(0); }
+}
+@keyframes scanline {
+0% { transform: translateY(0); }
+100% { transform: translateY(100vh); }
+}
+.pixel-font {
+font-family: 'Press Start 2P', cursive;
+}
+.float {
+animation: float 3s ease-in-out infinite;
+}
+.pulse {
+animation: pulse 2s ease-in-out infinite;
+}
+.bounce {
+animation: bounce 2s ease-in-out infinite;
+}
+.spin {
+animation: spin 8s linear infinite;
+}
+.cloud {
+position: absolute;
+animation: moveCloud linear infinite;
+}
+.pixel-border {
+box-shadow:
+0 4px 0 #000,
+inset -4px -4px 0 rgba(0, 0, 0, 0.3),
+inset 4px 4px 0 rgba(255, 255, 255, 0.5);
+}
+.scanline {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 2px;
+background: rgba(255, 255, 255, 0.1);
+z-index: 999;
+animation: scanline 8s linear infinite;
+pointer-events: none;
+opacity: 0;
+}
+.scanline-active {
+opacity: 1;
+}
+.pixelated {
+image-rendering: pixelated;
+image-rendering: -moz-crisp-edges;
+image-rendering: crisp-edges;
+}
+.pixel-button {
+position: relative;
+overflow: hidden;
+transition: all 0.2s;
+}
+.pixel-button:hover {
+transform: translateY(-2px);
+}
+.pixel-button:active {
+transform: translateY(2px);
+}
+.pixel-checkbox {
+appearance: none;
+width: 24px;
+height: 24px;
+background: #333;
+border: 2px solid #000;
+position: relative;
+cursor: pointer;
+}
+.pixel-checkbox:checked::after {
+content: '';
+position: absolute;
+top: 4px;
+left: 4px;
+width: 12px;
+height: 12px;
+background: #ff4757;
+}
+.pixel-range {
+appearance: none;
+width: 100%;
+height: 12px;
+background: #333;
+border: 2px solid #000;
+outline: none;
+}
+.pixel-range::-webkit-slider-thumb {
+appearance: none;
+width: 20px;
+height: 20px;
+background: #ff4757;
+border: 2px solid #000;
+cursor: pointer;
+}
+.pixel-switch {
+position: relative;
+display: inline-block;
+width: 48px;
+height: 24px;
+}
+.pixel-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+.pixel-slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #333;
+border: 2px solid #000;
+transition: .4s;
+}
+.pixel-slider:before {
+position: absolute;
+content: "";
+height: 16px;
+width: 16px;
+left: 2px;
+bottom: 2px;
+background-color: #ccc;
+transition: .4s;
+}
+input:checked + .pixel-slider {
+background-color: #ff4757;
+}
+input:checked + .pixel-slider:before {
+transform: translateX(24px);
+background-color: #fff;
+}
+.level-card {
+transition: transform 0.2s;
+}
+.level-card:hover {
+transform: scale(1.05);
+}
+.star {
+clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.heart {
+position: relative;
+width: 20px;
+height: 20px;
+background: #ff4757;
+}
+.heart:before, .heart:after {
+content: "";
+position: absolute;
+width: 20px;
+height: 20px;
+background: #ff4757;
+border-radius: 50%;
+}
+.heart:before {
+top: -10px;
+left: 0;
+}
+.heart:after {
+top: 0;
+left: -10px;
+}
+.d-pad {
+position: relative;
+width: 120px;
+height: 120px;
+}
+.d-pad-button {
+position: absolute;
+width: 40px;
+height: 40px;
+background: #333;
+border: 2px solid #000;
+}
+.d-pad-up {
+top: 0;
+left: 40px;
+}
+.d-pad-right {
+top: 40px;
+right: 0;
+}
+.d-pad-down {
+bottom: 0;
+left: 40px;
+}
+.d-pad-left {
+top: 40px;
+left: 0;
+}
+.action-button {
+width: 50px;
+height: 50px;
+border-radius: 50%;
+background: #ff4757;
+border: 2px solid #000;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+}
+.screen-shake {
+animation: shake 0.5s;
+}
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+.pixel-dust {
+position: absolute;
+width: 4px;
+height: 4px;
+background: #fff;
+pointer-events: none;
+}
+.hidden-section {
+display: none;
+}
+#landing-screen {
+background-image: url('https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20game%20background%20with%20blue%20sky%2C%20green%20hills%2C%20pixel%20clouds%2C%20and%20retro%20platformer%20elements.%20The%20scene%20should%20have%20a%20vibrant%20color%20palette%20with%20classic%20pixel%20art%20style%20reminiscent%20of%2080s%20and%2090s%20video%20games.%20Include%20some%20floating%20platforms%2C%20pixel%20trees%2C%20and%20small%20animated%20elements&width=1920&height=1080&seq=1&orientation=landscape');
+background-size: cover;
+background-position: center;
+}
+#level-select-screen {
+background-image: url('https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20game%20world%20map%20with%20different%20level%20zones%2C%20including%20forests%2C%20deserts%2C%20ice%20mountains%2C%20and%20lava%20areas.%20The%20map%20should%20have%20a%20dotted%20path%20connecting%20different%20level%20nodes%2C%20with%20pixel%20art%20decorations%20and%20a%20retro%20game%20aesthetic.%20Use%20bright%2C%20vibrant%20colors%20in%20classic%20pixel%20art%20style&width=1920&height=1080&seq=2&orientation=landscape');
+background-size: cover;
+background-position: center;
+}
+#game-screen {
+background-image: url('https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20platformer%20game%20level%20with%20green%20hills%2C%20brick%20platforms%2C%20pixel%20clouds%2C%20and%20retro%20game%20elements.%20The%20scene%20should%20include%20collectible%20coins%2C%20power-ups%2C%20and%20enemies%20in%20classic%20pixel%20art%20style.%20Use%20vibrant%20colors%20and%20clear%20pixel%20definition%20reminiscent%20of%20classic%20NES%20or%20SNES%20platformer%20games&width=1920&height=1080&seq=3&orientation=landscape');
+background-size: cover;
+background-position: center;
+}
+input, button {
+outline: none;
+}
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen overflow-x-hidden pixel-font text-gray-800">
+<div class="scanline"></div>
+<!-- Landing Screen -->
+<section id="landing-screen" class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Animated Clouds -->
+<div class="cloud" style="top: 15%; animation-duration: 45s; opacity: 0.8;">
+<div class="w-24 h-12 bg-white pixelated"></div>
+</div>
+<div class="cloud" style="top: 25%; animation-duration: 60s; animation-delay: 5s; opacity: 0.6;">
+<div class="w-32 h-16 bg-white pixelated"></div>
+</div>
+<div class="cloud" style="top: 10%; animation-duration: 50s; animation-delay: 15s; opacity: 0.7;">
+<div class="w-28 h-14 bg-white pixelated"></div>
+</div>
+<!-- Floating Pixel Elements -->
+<div class="absolute top-1/4 left-1/4 float" style="animation-delay: 0.5s;">
+<div class="w-8 h-8 bg-yellow-400 pixelated"></div>
+</div>
+<div class="absolute top-1/3 right-1/4 float" style="animation-delay: 1.2s;">
+<div class="w-6 h-6 bg-primary pixelated star"></div>
+</div>
+<div class="absolute bottom-1/3 left-1/3 float" style="animation-delay: 0.8s;">
+<div class="w-10 h-10 bg-blue-500 pixelated rounded"></div>
+</div>
+<!-- Game Title -->
+<h1 class="text-4xl md:text-6xl text-white mb-12 text-center bounce" style="text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000;">
+Retro-Style<br>Platform Game
+</h1>
+<!-- Press Start Button -->
+<button id="start-button" class="pixel-button bg-primary text-white px-8 py-4 text-xl pulse !rounded-button pixel-border">
+PRESS START
+</button>
+<!-- Sound Toggle -->
+<div class="absolute bottom-6 right-6 flex items-center gap-2">
+<span class="text-white text-xs">SOUND</span>
+<label class="pixel-switch">
+<input type="checkbox" id="sound-toggle" checked>
+<span class="pixel-slider"></span>
+</label>
+</div>
+<!-- CRT Effect Toggle -->
+<div class="absolute bottom-6 left-6 flex items-center gap-2">
+<span class="text-white text-xs">CRT EFFECT</span>
+<label class="pixel-switch">
+<input type="checkbox" id="crt-toggle">
+<span class="pixel-slider"></span>
+</label>
+</div>
+</section>
+<!-- Main Menu Screen -->
+<section id="main-menu" class="hidden-section min-h-screen flex flex-col items-center justify-center relative" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-4xl text-white mb-12 bounce">MAIN MENU</h2>
+<div class="flex flex-col gap-4 w-64">
+<button class="pixel-button bg-primary text-white py-3 !rounded-button pixel-border menu-option" data-target="game-screen">PLAY GAME</button>
+<button class="pixel-button bg-blue-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="level-select-screen">LEVEL SELECT</button>
+<button class="pixel-button bg-green-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="settings-screen">SETTINGS</button>
+<button class="pixel-button bg-green-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="character-screen">CHARACTERS</button>
+<button class="pixel-button bg-purple-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="achievements-screen">ACHIEVEMENTS</button>
+<button class="pixel-button bg-orange-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="shop-screen">SHOP</button>
+<button class="pixel-button bg-yellow-500 text-white py-3 !rounded-button pixel-border menu-option" data-target="highscore-screen">HIGH SCORES</button>
+</div>
+<div class="absolute bottom-6 left-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border" id="back-to-landing">BACK</button>
+</div>
+</section>
+<!-- Level Select Screen -->
+<section id="level-select-screen" class="hidden-section min-h-screen relative p-8">
+<h2 class="text-3xl text-white text-center mb-8" style="text-shadow: 2px 2px 0 #000;">SELECT LEVEL</h2>
+<div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+<!-- Level 1 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-green-800 mb-2 !rounded overflow-hidden pixelated">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20platformer%20game%20level%20with%20green%20hills%2C%20floating%20platforms%2C%20coins%2C%20and%20a%20castle%20in%20the%20distance.%20Classic%20first%20level%20of%20a%20retro%20platformer%20game%20with%20bright%20colors%20and%20simple%20pixel%20art%20design&width=300&height=200&seq=4&orientation=landscape" alt="Level 1" class="w-full h-full object-cover">
+</div>
+<h3 class="text-white text-sm mb-1">1. GREEN HILLS</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-yellow-400 star mr-1"></div>
+<div class="w-4 h-4 bg-yellow-400 star mr-1"></div>
+<div class="w-4 h-4 bg-yellow-400 star"></div>
+</div>
+<span class="text-xs text-white">SCORE: 5400</span>
+</div>
+</div>
+<!-- Level 2 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-blue-800 mb-2 !rounded overflow-hidden pixelated">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20underwater%20platformer%20level%20with%20blue%20background%2C%20bubbles%2C%20pixel%20fish%2C%20coral%2C%20and%20underwater%20platforms.%20Classic%20retro%20game%20style%20with%20vibrant%20blues%20and%20aquatic%20elements&width=300&height=200&seq=5&orientation=landscape" alt="Level 2" class="w-full h-full object-cover">
+</div>
+<h3 class="text-white text-sm mb-1">2. AQUA ZONE</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-yellow-400 star mr-1"></div>
+<div class="w-4 h-4 bg-yellow-400 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star"></div>
+</div>
+<span class="text-xs text-white">SCORE: 3200</span>
+</div>
+</div>
+<!-- Level 3 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-red-800 mb-2 !rounded overflow-hidden pixelated">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20lava%20platformer%20level%20with%20red%20and%20orange%20background%2C%20lava%20pools%2C%20rock%20platforms%2C%20and%20fire%20elements.%20Classic%20retro%20game%20style%20with%20warm%20colors%20and%20dangerous-looking%20environment&width=300&height=200&seq=6&orientation=landscape" alt="Level 3" class="w-full h-full object-cover">
+</div>
+<h3 class="text-white text-sm mb-1">3. LAVA PITS</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-yellow-400 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star"></div>
+</div>
+<span class="text-xs text-white">SCORE: 1800</span>
+</div>
+</div>
+<!-- Level 4 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-gray-800 mb-2 !rounded overflow-hidden pixelated relative">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20ice%20and%20snow%20platformer%20level%20with%20blue-white%20background%2C%20ice%20platforms%2C%20snow%20piles%2C%20and%20icicles.%20Classic%20retro%20game%20style%20with%20cool%20colors%20and%20winter%20elements&width=300&height=200&seq=7&orientation=landscape" alt="Level 4" class="w-full h-full object-cover opacity-50">
+<div class="absolute inset-0 flex items-center justify-center">
+<i class="ri-lock-fill ri-2x text-white"></i>
+</div>
+</div>
+<h3 class="text-white text-sm mb-1">4. ICE PEAKS</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star"></div>
+</div>
+<span class="text-xs text-white">LOCKED</span>
+</div>
+</div>
+<!-- Level 5 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-gray-800 mb-2 !rounded overflow-hidden pixelated relative">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20cave%20platformer%20level%20with%20dark%20purple%20background%2C%20crystal%20formations%2C%20stalactites%2C%20and%20glowing%20elements.%20Classic%20retro%20game%20style%20with%20mysterious%20atmosphere%20and%20underground%20features&width=300&height=200&seq=8&orientation=landscape" alt="Level 5" class="w-full h-full object-cover opacity-50">
+<div class="absolute inset-0 flex items-center justify-center">
+<i class="ri-lock-fill ri-2x text-white"></i>
+</div>
+</div>
+<h3 class="text-white text-sm mb-1">5. CRYSTAL CAVES</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star"></div>
+</div>
+<span class="text-xs text-white">LOCKED</span>
+</div>
+</div>
+<!-- Level 6 -->
+<div class="level-card bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-32 bg-gray-800 mb-2 !rounded overflow-hidden pixelated relative">
+<img src="https://readdy.ai/api/search-image?query=8-bit%20pixel%20art%20factory%20platformer%20level%20with%20gray%20and%20red%20background%2C%20gears%2C%20pipes%2C%20conveyor%20belts%2C%20and%20industrial%20elements.%20Classic%20retro%20game%20style%20with%20mechanical%20features%20and%20factory%20atmosphere&width=300&height=200&seq=9&orientation=landscape" alt="Level 6" class="w-full h-full object-cover opacity-50">
+<div class="absolute inset-0 flex items-center justify-center">
+<i class="ri-lock-fill ri-2x text-white"></i>
+</div>
+</div>
+<h3 class="text-white text-sm mb-1">6. GEAR FACTORY</h3>
+<div class="flex justify-between items-center">
+<div class="flex">
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 star"></div>
+</div>
+<span class="text-xs text-white">LOCKED</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 left-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<!-- Game Screen -->
+<section id="game-screen" class="hidden-section min-h-screen relative">
+<!-- HUD Top Bar -->
+<div class="flex justify-between items-center p-4 bg-black bg-opacity-70">
+<!-- Left HUD -->
+<div class="flex items-center gap-4">
+<!-- Health -->
+<div class="flex items-center gap-1">
+<div class="w-5 h-5 bg-primary"></div>
+<div class="w-5 h-5 bg-primary"></div>
+<div class="w-5 h-5 bg-primary"></div>
+</div>
+<!-- Coins -->
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 bg-yellow-400 pixelated float" style="animation-duration: 1.5s;"></div>
+<span class="text-white text-xs">x 28</span>
+</div>
+<!-- Score -->
+<div class="text-white text-xs">
+SCORE: 2450
+</div>
+</div>
+<!-- Right HUD -->
+<div class="flex items-center gap-4">
+<!-- Timer -->
+<div class="text-white text-xs">
+TIME: 02:45
+</div>
+<!-- Level Progress -->
+<div class="w-32 h-4 bg-gray-800 !rounded-sm overflow-hidden">
+<div class="h-full bg-primary" style="width: 35%;"></div>
+</div>
+<!-- Power-ups -->
+<div class="flex gap-2">
+<div class="w-8 h-8 bg-gray-700 !rounded-sm flex items-center justify-center">
+<div class="w-6 h-6 bg-red-500 pixelated"></div>
+</div>
+<div class="w-8 h-8 bg-gray-700 !rounded-sm flex items-center justify-center">
+<div class="w-6 h-6 bg-blue-500 pixelated"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Game Content Area -->
+<div class="flex-1 min-h-[calc(100vh-80px)]">
+<!-- Game canvas would go here in a real implementation -->
+</div>
+<!-- Mobile Controls (only visible on small screens) -->
+<div class="md:hidden fixed bottom-4 left-4 right-4 flex justify-between">
+<!-- D-Pad -->
+<div class="d-pad">
+<button class="d-pad-button d-pad-up pixel-border">▲</button>
+<button class="d-pad-button d-pad-right pixel-border">▶</button>
+<button class="d-pad-button d-pad-down pixel-border">▼</button>
+<button class="d-pad-button d-pad-left pixel-border">◀</button>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-2">
+<button class="action-button pixel-border">A</button>
+<button class="action-button pixel-border">B</button>
+</div>
+</div>
+<!-- Pause Button -->
+<button id="pause-button" class="absolute top-4 right-4 w-10 h-10 bg-gray-800 !rounded flex items-center justify-center pixel-border">
+<i class="ri-pause-fill ri-lg text-white"></i>
+</button>
+<!-- Back Button (for demo) -->
+<div class="absolute bottom-6 left-6 md:block hidden">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">EXIT</button>
+</div>
+</section>
+<!-- Pause Menu Overlay -->
+<div id="pause-menu" class="hidden-section fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+<div class="bg-gray-800 p-8 !rounded pixel-border max-w-md w-full">
+<h2 class="text-2xl text-white text-center mb-6">GAME PAUSED</h2>
+<div class="flex flex-col gap-4">
+<button class="pixel-button bg-primary text-white py-3 !rounded-button pixel-border" id="resume-button">RESUME GAME</button>
+<button class="pixel-button bg-blue-500 text-white py-3 !rounded-button pixel-border">RESTART LEVEL</button>
+<button class="pixel-button bg-yellow-500 text-white py-3 !rounded-button pixel-border">SOUND SETTINGS</button>
+<button class="pixel-button bg-red-500 text-white py-3 !rounded-button pixel-border back-button" data-target="main-menu">QUIT TO MENU</button>
+</div>
+<div class="mt-6 p-4 bg-gray-900 !rounded">
+<h3 class="text-sm text-white mb-2">LEVEL STATISTICS</h3>
+<div class="grid grid-cols-2 gap-2 text-xs text-white">
+<div>COINS COLLECTED:</div>
+<div>28/50</div>
+<div>ENEMIES DEFEATED:</div>
+<div>12</div>
+<div>TIME ELAPSED:</div>
+<div>02:45</div>
+<div>CURRENT SCORE:</div>
+<div>2450</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Settings Screen -->
+<section id="settings-screen" class="hidden-section min-h-screen flex flex-col items-center justify-center p-8" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-3xl text-white mb-8">SETTINGS</h2>
+<div class="bg-gray-800 p-6 !rounded pixel-border max-w-md w-full">
+<h3 class="text-xl text-white mb-4">AUDIO</h3>
+<div class="mb-4">
+<label class="text-white text-sm block mb-2">MUSIC VOLUME</label>
+<input type="range" class="pixel-range w-full" min="0" max="100" value="80">
+</div>
+<div class="mb-4">
+<label class="text-white text-sm block mb-2">SOUND EFFECTS</label>
+<input type="range" class="pixel-range w-full" min="0" max="100" value="100">
+</div>
+<div class="mb-6 flex items-center justify-between">
+<span class="text-white text-sm">MUTE ALL</span>
+<label class="pixel-switch">
+<input type="checkbox">
+<span class="pixel-slider"></span>
+</label>
+</div>
+<h3 class="text-xl text-white mb-4">VIDEO</h3>
+<div class="mb-4 flex items-center justify-between">
+<span class="text-white text-sm">CRT EFFECT</span>
+<label class="pixel-switch">
+<input type="checkbox" id="settings-crt-toggle">
+<span class="pixel-slider"></span>
+</label>
+</div>
+<div class="mb-4 flex items-center justify-between">
+<span class="text-white text-sm">PERFORMANCE MODE</span>
+<label class="pixel-switch">
+<input type="checkbox">
+<span class="pixel-slider"></span>
+</label>
+</div>
+<h3 class="text-xl text-white mb-4">CONTROLS</h3>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="text-white text-sm">MOVE LEFT</div>
+<div class="bg-gray-700 px-2 py-1 text-center text-white text-sm !rounded">A</div>
+<div class="text-white text-sm">MOVE RIGHT</div>
+<div class="bg-gray-700 px-2 py-1 text-center text-white text-sm !rounded">D</div>
+<div class="text-white text-sm">JUMP</div>
+<div class="bg-gray-700 px-2 py-1 text-center text-white text-sm !rounded">SPACE</div>
+<div class="text-white text-sm">ACTION</div>
+<div class="bg-gray-700 px-2 py-1 text-center text-white text-sm !rounded">E</div>
+</div>
+<div class="mb-4 flex items-center justify-between">
+<span class="text-white text-sm">TOUCH SENSITIVITY</span>
+<input type="range" class="pixel-range w-32" min="0" max="100" value="70">
+</div>
+</div>
+<div class="mt-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<!-- Character Selection Screen -->
+<section id="character-screen" class="hidden-section min-h-screen flex flex-col items-center justify-center p-8" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-3xl text-white mb-8">SELECT CHARACTER</h2>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+<!-- Character 1 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border hover:transform hover:scale-105 transition-transform cursor-pointer character-card">
+<div class="h-48 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20game%20character%2C%20male%20adventurer%20with%20red%20cap%20and%20blue%20outfit%2C%20standing%20pose%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=300&seq=10&orientation=portrait" class="w-full h-full object-cover" alt="Character 1">
+</div>
+<h3 class="text-white text-lg mb-2">PIXEL KNIGHT</h3>
+<div class="grid grid-cols-2 gap-2 text-sm mb-4">
+<div class="text-gray-400">SPEED</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary"></div>
+</div>
+<div class="text-gray-400">POWER</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+<div class="text-gray-400">MAGIC</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+</div>
+<button class="w-full pixel-button bg-primary text-white py-2 !rounded-button">SELECT</button>
+</div>
+<!-- Character 2 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border hover:transform hover:scale-105 transition-transform cursor-pointer character-card">
+<div class="h-48 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20game%20character%2C%20female%20mage%20with%20purple%20robe%20and%20staff%2C%20standing%20pose%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=300&seq=11&orientation=portrait" class="w-full h-full object-cover" alt="Character 2">
+</div>
+<h3 class="text-white text-lg mb-2">MAGIC WEAVER</h3>
+<div class="grid grid-cols-2 gap-2 text-sm mb-4">
+<div class="text-gray-400">SPEED</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+<div class="text-gray-400">POWER</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+<div class="text-gray-400">MAGIC</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary"></div>
+</div>
+</div>
+<button class="w-full pixel-button bg-primary text-white py-2 !rounded-button">SELECT</button>
+</div>
+<!-- Character 3 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border hover:transform hover:scale-105 transition-transform cursor-pointer character-card">
+<div class="h-48 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20game%20character%2C%20agile%20rogue%20with%20green%20hood%20and%20daggers%2C%20standing%20pose%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=300&seq=12&orientation=portrait" class="w-full h-full object-cover" alt="Character 3">
+</div>
+<h3 class="text-white text-lg mb-2">SHADOW BLADE</h3>
+<div class="grid grid-cols-2 gap-2 text-sm mb-4">
+<div class="text-gray-400">SPEED</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary"></div>
+</div>
+<div class="text-gray-400">POWER</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+<div class="text-gray-400">MAGIC</div>
+<div class="flex">
+<div class="w-4 h-4 bg-primary mr-1"></div>
+<div class="w-4 h-4 bg-gray-600 mr-1"></div>
+<div class="w-4 h-4 bg-gray-600"></div>
+</div>
+</div>
+<button class="w-full pixel-button bg-gray-600 text-white py-2 !rounded-button">LOCKED</button>
+</div>
+</div>
+<div class="mt-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<!-- Achievements Screen -->
+<section id="achievements-screen" class="hidden-section min-h-screen flex flex-col items-center justify-center p-8" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-3xl text-white mb-8">ACHIEVEMENTS</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full">
+<!-- Achievement Category 1 -->
+<div class="bg-gray-800 p-6 !rounded pixel-border">
+<h3 class="text-xl text-white mb-4">EXPLORER</h3>
+<div class="space-y-4">
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">World Traveler</span>
+<span class="text-yellow-400">15/20</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 75%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Complete levels in different worlds</p>
+</div>
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Secret Finder</span>
+<span class="text-yellow-400">3/10</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 30%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Discover hidden areas</p>
+</div>
+</div>
+</div>
+<!-- Achievement Category 2 -->
+<div class="bg-gray-800 p-6 !rounded pixel-border">
+<h3 class="text-xl text-white mb-4">WARRIOR</h3>
+<div class="space-y-4">
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Enemy Slayer</span>
+<span class="text-yellow-400">150/200</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 75%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Defeat enemies</p>
+</div>
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Boss Hunter</span>
+<span class="text-yellow-400">2/5</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 40%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Defeat boss enemies</p>
+</div>
+</div>
+</div>
+<!-- Achievement Category 3 -->
+<div class="bg-gray-800 p-6 !rounded pixel-border">
+<h3 class="text-xl text-white mb-4">COLLECTOR</h3>
+<div class="space-y-4">
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Coin Master</span>
+<span class="text-yellow-400">2500/5000</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 50%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Collect coins</p>
+</div>
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Gear Collector</span>
+<span class="text-yellow-400">8/20</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 40%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Find special equipment</p>
+</div>
+</div>
+</div>
+<!-- Achievement Category 4 -->
+<div class="bg-gray-800 p-6 !rounded pixel-border">
+<h3 class="text-xl text-white mb-4">SPEEDRUNNER</h3>
+<div class="space-y-4">
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Quick Clear</span>
+<span class="text-yellow-400">4/10</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 40%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Complete levels under par time</p>
+</div>
+<div class="achievement-item">
+<div class="flex items-center justify-between mb-2">
+<span class="text-white">Speed Demon</span>
+<span class="text-yellow-400">1/5</span>
+</div>
+<div class="h-2 bg-gray-700 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 20%"></div>
+</div>
+<p class="text-gray-400 text-sm mt-1">Complete world speedrun challenges</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<!-- Shop Screen -->
+<section id="shop-screen" class="hidden-section min-h-screen flex flex-col items-center justify-center p-8" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-3xl text-white mb-8">SHOP</h2>
+<div class="flex items-center justify-between w-full max-w-4xl mb-8">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-yellow-400 pixelated"></div>
+<span class="text-white text-xl">2,450</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-purple-500 pixelated"></div>
+<span class="text-white text-xl">5</span>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="pixel-button bg-blue-500 text-white px-4 py-2 !rounded-button">POWER-UPS</button>
+<button class="pixel-button bg-green-500 text-white px-4 py-2 !rounded-button">EQUIPMENT</button>
+<button class="pixel-button bg-yellow-500 text-white px-4 py-2 !rounded-button">COSMETICS</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full">
+<!-- Shop Item 1 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-40 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20power-up%20item%2C%20glowing%20health%20potion%20in%20red%20color%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=200&seq=13&orientation=squarish" class="w-full h-full object-cover" alt="Health Potion">
+</div>
+<h3 class="text-white text-lg mb-2">Health Potion</h3>
+<p class="text-gray-400 text-sm mb-4">Restores 50% HP</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 bg-yellow-400 pixelated"></div>
+<span class="text-white">150</span>
+</div>
+<button class="pixel-button bg-primary text-white px-4 py-2 !rounded-button">BUY</button>
+</div>
+</div>
+<!-- Shop Item 2 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-40 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20power-up%20item%2C%20lightning%20speed%20boost%20power-up%20in%20yellow%20color%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=200&seq=14&orientation=squarish" class="w-full h-full object-cover" alt="Speed Boost">
+</div>
+<h3 class="text-white text-lg mb-2">Speed Boost</h3>
+<p class="text-gray-400 text-sm mb-4">2x Speed for 30s</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 bg-yellow-400 pixelated"></div>
+<span class="text-white">300</span>
+</div>
+<button class="pixel-button bg-primary text-white px-4 py-2 !rounded-button">BUY</button>
+</div>
+</div>
+<!-- Shop Item 3 -->
+<div class="bg-gray-800 p-4 !rounded pixel-border">
+<div class="h-40 bg-gray-700 mb-4 !rounded overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=pixel%20art%20power-up%20item%2C%20shield%20protection%20power-up%20in%20blue%20color%2C%20retro%20game%20style%2C%20clean%20background%2C%20highly%20detailed%20pixel%20art&width=200&height=200&seq=15&orientation=squarish" class="w-full h-full object-cover" alt="Shield">
+</div>
+<h3 class="text-white text-lg mb-2">Shield</h3>
+<p class="text-gray-400 text-sm mb-4">Blocks next hit</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 bg-yellow-400 pixelated"></div>
+<span class="text-white">500</span>
+</div>
+<button class="pixel-button bg-primary text-white px-4 py-2 !rounded-button">BUY</button>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<!-- High Scores Screen -->
+<section id="highscore-screen" class="hidden-section min-h-screen flex flex-col items-center justify-center p-8" style="background: linear-gradient(to bottom, #4b6cb7, #182848);">
+<h2 class="text-3xl text-white mb-8">HIGH SCORES</h2>
+<div class="bg-gray-800 p-6 !rounded pixel-border max-w-md w-full">
+<table class="w-full border-collapse">
+<thead>
+<tr class="border-b border-gray-700">
+<th class="text-left text-white py-2">RANK</th>
+<th class="text-left text-white py-2">PLAYER</th>
+<th class="text-right text-white py-2">SCORE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-gray-700">
+<td class="text-yellow-400 py-2">1</td>
+<td class="text-white py-2">PIXELMASTER</td>
+<td class="text-white text-right py-2">12,450</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-gray-400 py-2">2</td>
+<td class="text-white py-2">RETROGAMER</td>
+<td class="text-white text-right py-2">10,820</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-yellow-800 py-2">3</td>
+<td class="text-white py-2">JUMPKING</td>
+<td class="text-white text-right py-2">9,675</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-white py-2">4</td>
+<td class="text-white py-2">COINMASTER</td>
+<td class="text-white text-right py-2">8,340</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-white py-2">5</td>
+<td class="text-white py-2">ARCADEPRO</td>
+<td class="text-white text-right py-2">7,920</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-white py-2">6</td>
+<td class="text-white py-2">BITHERO</td>
+<td class="text-white text-right py-2">6,540</td>
+</tr>
+<tr class="border-b border-gray-700">
+<td class="text-white py-2">7</td>
+<td class="text-white py-2">PIXELJUMPER</td>
+<td class="text-white text-right py-2">5,780</td>
+</tr>
+<tr>
+<td class="text-white py-2">8</td>
+<td class="text-white py-2">YOU</td>
+<td class="text-white text-right py-2">5,400</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6">
+<button class="pixel-button bg-gray-700 text-white px-4 py-2 !rounded-button pixel-border back-button" data-target="main-menu">BACK</button>
+</div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+// Audio element (would be initialized with actual audio in a real game)
+const bgMusic = new Audio();
+bgMusic.loop = true;
+let isMusicPlaying = true;
+// Screen navigation
+const startButton = document.getElementById('start-button');
+const backToLandingButton = document.getElementById('back-to-landing');
+const menuOptions = document.querySelectorAll('.menu-option');
+const backButtons = document.querySelectorAll('.back-button');
+const pauseButton = document.getElementById('pause-button');
+const resumeButton = document.getElementById('resume-button');
+// Toggle buttons
+const soundToggle = document.getElementById('sound-toggle');
+const crtToggle = document.getElementById('crt-toggle');
+const settingsCrtToggle = document.getElementById('settings-crt-toggle');
+const scanline = document.querySelector('.scanline');
+// Screens
+const landingScreen = document.getElementById('landing-screen');
+const mainMenu = document.getElementById('main-menu');
+const levelSelectScreen = document.getElementById('level-select-screen');
+const gameScreen = document.getElementById('game-screen');
+const pauseMenu = document.getElementById('pause-menu');
+const settingsScreen = document.getElementById('settings-screen');
+const characterScreen = document.getElementById('character-screen');
+const achievementsScreen = document.getElementById('achievements-screen');
+const shopScreen = document.getElementById('shop-screen');
+const highscoreScreen = document.getElementById('highscore-screen');
+// Show a specific screen and hide others
+function showScreen(screenId) {
+const screens = [landingScreen, mainMenu, levelSelectScreen, gameScreen, pauseMenu, settingsScreen, characterScreen, achievementsScreen, shopScreen, highscoreScreen];
+screens.forEach(screen => {
+if (screen.id === screenId) {
+screen.classList.remove('hidden-section');
+} else if (screen.id !== 'pause-menu' || screenId !== 'game-screen') {
+screen.classList.add('hidden-section');
+}
+});
+}
+// Start button click
+startButton.addEventListener('click', function() {
+createPixelDustEffect(this);
+showScreen('main-menu');
+});
+// Back to landing button
+backToLandingButton.addEventListener('click', function() {
+createPixelDustEffect(this);
+showScreen('landing-screen');
+});
+// Menu options
+menuOptions.forEach(option => {
+option.addEventListener('click', function() {
+createPixelDustEffect(this);
+const targetScreen = this.getAttribute('data-target');
+showScreen(targetScreen);
+});
+});
+// Back buttons
+backButtons.forEach(button => {
+button.addEventListener('click', function() {
+createPixelDustEffect(this);
+const targetScreen = this.getAttribute('data-target');
+showScreen(targetScreen);
+// If we're exiting the game, hide the pause menu too
+if (targetScreen === 'main-menu' && !gameScreen.classList.contains('hidden-section')) {
+pauseMenu.classList.add('hidden-section');
+}
+});
+});
+// Pause button
+pauseButton.addEventListener('click', function() {
+createPixelDustEffect(this);
+pauseMenu.classList.remove('hidden-section');
+});
+// Resume button
+resumeButton.addEventListener('click', function() {
+createPixelDustEffect(this);
+pauseMenu.classList.add('hidden-section');
+});
+// Sound toggle
+soundToggle.addEventListener('change', function() {
+isMusicPlaying = this.checked;
+if (isMusicPlaying) {
+// bgMusic.play();
+} else {
+// bgMusic.pause();
+}
+});
+// CRT effect toggle
+function toggleCRTEffect(isOn) {
+if (isOn) {
+scanline.classList.add('scanline-active');
+} else {
+scanline.classList.remove('scanline-active');
+}
+// Keep both toggles in sync
+crtToggle.checked = isOn;
+if (settingsCrtToggle) {
+settingsCrtToggle.checked = isOn;
+}
+}
+crtToggle.addEventListener('change', function() {
+toggleCRTEffect(this.checked);
+});
+if (settingsCrtToggle) {
+settingsCrtToggle.addEventListener('change', function() {
+toggleCRTEffect(this.checked);
+});
+}
+// Pixel dust effect on button clicks
+function createPixelDustEffect(element) {
+const rect = element.getBoundingClientRect();
+const centerX = rect.left + rect.width / 2;
+const centerY = rect.top + rect.height / 2;
+for (let i = 0; i < 10; i++) {
+const dust = document.createElement('div');
+dust.classList.add('pixel-dust');
+const randomAngle = Math.random() * Math.PI * 2;
+const randomDistance = Math.random() * 50 + 20;
+const x = centerX + Math.cos(randomAngle) * randomDistance;
+const y = centerY + Math.sin(randomAngle) * randomDistance;
+dust.style.left = `${x}px`;
+dust.style.top = `${y}px`;
+dust.style.backgroundColor = getComputedStyle(element).backgroundColor;
+dust.style.animation = `pixelDust ${Math.random() * 0.5 + 0.5}s forwards`;
+document.body.appendChild(dust);
+setTimeout(() => {
+document.body.removeChild(dust);
+}, 1000);
+}
+}
+// Level card hover effect
+const levelCards = document.querySelectorAll('.level-card');
+levelCards.forEach(card => {
+card.addEventListener('click', function() {
+// Only proceed if the level is not locked
+if (!this.querySelector('.ri-lock-fill')) {
+createPixelDustEffect(this);
+showScreen('game-screen');
+}
+});
+});
+// D-pad button press effect
+const dpadButtons = document.querySelectorAll('.d-pad-button');
+dpadButtons.forEach(button => {
+button.addEventListener('mousedown', function() {
+this.style.transform = 'translateY(2px)';
+});
+button.addEventListener('mouseup', function() {
+this.style.transform = 'translateY(0)';
+});
+button.addEventListener('mouseleave', function() {
+this.style.transform = 'translateY(0)';
+});
+});
+// Action button press effect
+const actionButtons = document.querySelectorAll('.action-button');
+actionButtons.forEach(button => {
+button.addEventListener('mousedown', function() {
+this.style.transform = 'scale(0.95)';
+});
+button.addEventListener('mouseup', function() {
+this.style.transform = 'scale(1)';
+});
+button.addEventListener('mouseleave', function() {
+this.style.transform = 'scale(1)';
+});
+});
+});
+</script>
+</body>
+</html>
